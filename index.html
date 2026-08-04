@@ -102,6 +102,7 @@
 
   <script src="space.js"></script>
   <script>
+    const ACCESS_KEY = "Delta1/6";
     const ACCESS_HASH = "8b32f2fa6401eb1ec35d95d078201c9a0169de4297a7466daf3984cbda358a9b";
     const SESSION_MINUTES = 5;
     const storageKey = "site_unlock_until";
@@ -138,6 +139,19 @@
       return [...new Uint8Array(hash)].map((x) => x.toString(16).padStart(2, "0")).join("");
     }
 
+    async function verifyPassword(value) {
+      if (value === ACCESS_KEY) {
+        return true;
+      }
+
+      if (!window.crypto || !window.crypto.subtle) {
+        return false;
+      }
+
+      const givenHash = await sha256(value);
+      return givenHash === ACCESS_HASH;
+    }
+
     function refreshState() {
       if (isUnlocked()) {
         showSite();
@@ -151,8 +165,9 @@
       event.preventDefault();
       message.textContent = "";
 
-      const givenHash = await sha256(input.value);
-      if (givenHash !== ACCESS_HASH) {
+      const provided = input.value.trim();
+      const ok = await verifyPassword(provided);
+      if (!ok) {
         showGate("Niepoprawny klucz.");
         return;
       }
