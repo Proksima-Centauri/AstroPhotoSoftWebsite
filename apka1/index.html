@@ -106,6 +106,40 @@
       color: var(--sub);
     }
 
+    .versions {
+      margin: 18px 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .version-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(2, 8, 18, 0.45);
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .version-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .version-title {
+      margin: 0;
+      font-size: 1.02rem;
+    }
+
+    .version-meta {
+      margin: 0;
+      color: var(--sub);
+      font-size: 0.93rem;
+      line-height: 1.45;
+    }
+
     .download {
       display: inline-block;
       border: none;
@@ -123,6 +157,109 @@
       pointer-events: none;
     }
 
+    .admin {
+      margin-top: 22px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(2, 8, 18, 0.45);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .admin h2 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .admin p {
+      margin: 0;
+      color: var(--sub);
+      font-size: 0.95rem;
+    }
+
+    .admin-form,
+    .version-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .admin input,
+    .admin select,
+    .admin textarea {
+      width: 100%;
+      border-radius: 9px;
+      border: 1px solid rgba(149, 245, 255, 0.3);
+      background: rgba(1, 6, 14, 0.7);
+      color: var(--txt);
+      padding: 10px 11px;
+      font: inherit;
+    }
+
+    .admin textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .admin-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .admin-check {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--sub);
+      font-size: 0.93rem;
+    }
+
+    .admin-check input {
+      width: auto;
+      accent-color: var(--accent);
+      margin: 0;
+    }
+
+    .admin-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .admin-btn {
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: var(--accent);
+      color: var(--accent-txt);
+      font-weight: 700;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .admin-btn.secondary {
+      background: transparent;
+      border-color: rgba(149, 245, 255, 0.4);
+      color: var(--txt);
+    }
+
+    .admin-btn.danger {
+      background: rgba(255, 92, 92, 0.18);
+      border-color: rgba(255, 92, 92, 0.45);
+      color: #ffdede;
+    }
+
+    .version-admin-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .msg {
       margin-top: 10px;
       color: #ffd4d4;
@@ -131,6 +268,10 @@
 
     @media (max-width: 720px) {
       .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-row {
         grid-template-columns: 1fr;
       }
     }
@@ -152,27 +293,360 @@
     </section>
 
     <section class="specs">
-      <h2>Wersja do pobrania</h2>
-      <p>System: Linux (x86_64)</p>
-      <p>Format: skrypt startowy (przykładowy pakiet)</p>
-      <p>Pobieranie jest aktywne tylko na systemie Linux.</p>
+      <h2>Wersje do pobrania</h2>
+      <p>Lista wersji jest ładowana dynamicznie.</p>
+      <p>Nowe wersje możesz dodać po zalogowaniu jako admin.</p>
     </section>
 
-    <a id="download-linux" class="download" href="../downloads/astro-ai-plus-linux.sh" download>⬇ Pobierz na Linux</a>
+    <section id="versions-list" class="versions" aria-live="polite"></section>
     <div id="download-msg" class="msg" aria-live="polite"></div>
+
+    <section class="admin">
+      <h2>Panel admina</h2>
+      <p>Tylko admin może dodawać nowe wersje bez edycji kodu.</p>
+
+      <form id="admin-login-form" class="admin-form">
+        <input id="admin-password" type="password" placeholder="Hasło admina" autocomplete="current-password" required>
+        <button class="admin-btn" type="submit">Zaloguj jako admin</button>
+      </form>
+
+      <div id="admin-auth-msg" class="msg" aria-live="polite"></div>
+
+      <div id="admin-tools" class="hidden">
+        <form id="version-form" class="version-form">
+          <div class="admin-row">
+            <input id="version-name" type="text" placeholder="Wersja, np. 1.1.0" required>
+            <input id="version-system" type="text" placeholder="System, np. Linux (x86_64)" required>
+          </div>
+
+          <div class="admin-row">
+            <input id="version-format" type="text" placeholder="Format, np. skrypt startowy" required>
+            <input id="version-link" type="text" placeholder="Link do pliku, np. ../downloads/paczka.sh" required>
+          </div>
+
+          <label class="admin-check">
+            <input id="version-linux-only" type="checkbox" checked>
+            Dostępne tylko na Linux
+          </label>
+
+          <textarea id="version-notes" placeholder="Krótki opis wydania (opcjonalnie)"></textarea>
+
+          <div class="admin-actions">
+            <button id="version-submit" class="admin-btn" type="submit">Dodaj wersję</button>
+            <button id="version-cancel-edit" class="admin-btn secondary hidden" type="button">Anuluj edycję</button>
+            <button id="admin-logout" class="admin-btn secondary" type="button">Wyloguj</button>
+          </div>
+        </form>
+        <div id="admin-tools-msg" class="msg" aria-live="polite"></div>
+      </div>
+    </section>
   </main>
 
   <script>
     const isLinux = /Linux/i.test(navigator.platform) || /Linux/i.test(navigator.userAgent);
-    const btn = document.getElementById("download-linux");
+    const versionsList = document.getElementById("versions-list");
     const msg = document.getElementById("download-msg");
+    const adminLoginForm = document.getElementById("admin-login-form");
+    const adminPassword = document.getElementById("admin-password");
+    const adminAuthMsg = document.getElementById("admin-auth-msg");
+    const adminTools = document.getElementById("admin-tools");
+    const adminToolsMsg = document.getElementById("admin-tools-msg");
+    const adminLogout = document.getElementById("admin-logout");
+    const versionForm = document.getElementById("version-form");
+    const versionSubmit = document.getElementById("version-submit");
+    const versionCancelEdit = document.getElementById("version-cancel-edit");
+    const versionName = document.getElementById("version-name");
+    const versionSystem = document.getElementById("version-system");
+    const versionFormat = document.getElementById("version-format");
+    const versionLink = document.getElementById("version-link");
+    const versionLinuxOnly = document.getElementById("version-linux-only");
+    const versionNotes = document.getElementById("version-notes");
+    let editingVersionId = null;
 
-    if (!isLinux) {
-      btn.setAttribute("aria-disabled", "true");
-      btn.removeAttribute("href");
-      btn.removeAttribute("download");
-      msg.textContent = "Pobieranie jest dostępne tylko dla Linux.";
+    const ADMIN_SESSION_KEY = "astro_ai_plus_admin_session";
+    const ADMIN_TOKEN_KEY = "astro_ai_plus_admin_token";
+
+    function normalizeVersion(entry) {
+      if (!entry || typeof entry !== "object") {
+        return null;
+      }
+
+      const version = String(entry.version || "").trim();
+      const system = String(entry.system || "").trim();
+      const format = String(entry.format || "").trim();
+      const href = String(entry.href || "").trim();
+      const notes = String(entry.notes || "").trim();
+
+      if (!version || !system || !format || !href) {
+        return null;
+      }
+
+      return {
+        id: String(entry.id || ""),
+        version,
+        system,
+        format,
+        href,
+        notes,
+        linuxOnly: Boolean(entry.linuxOnly)
+      };
     }
+
+    async function apiRequest(path, options = {}) {
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch(path, {
+        ...options,
+        headers
+      });
+
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch {
+        payload = null;
+      }
+
+      if (!response.ok) {
+        const errorMessage = payload && payload.error ? payload.error : "Błąd żądania do serwera.";
+        throw new Error(errorMessage);
+      }
+
+      return payload;
+    }
+
+    async function loadVersions() {
+      const payload = await apiRequest("/api/versions", { method: "GET" });
+      const items = Array.isArray(payload && payload.versions) ? payload.versions : [];
+      return items.map(normalizeVersion).filter(Boolean);
+    }
+
+    let versions = [];
+
+    function clearVersionForm() {
+      editingVersionId = null;
+      versionForm.reset();
+      versionLinuxOnly.checked = true;
+      versionSubmit.textContent = "Dodaj wersję";
+      versionCancelEdit.classList.add("hidden");
+    }
+
+    function startVersionEdit(item) {
+      editingVersionId = item.id;
+      versionName.value = item.version;
+      versionSystem.value = item.system;
+      versionFormat.value = item.format;
+      versionLink.value = item.href;
+      versionLinuxOnly.checked = item.linuxOnly;
+      versionNotes.value = item.notes;
+      versionSubmit.textContent = "Zapisz zmiany";
+      versionCancelEdit.classList.remove("hidden");
+      adminToolsMsg.textContent = `Edytujesz wersję ${item.version}.`;
+    }
+
+    function renderVersions() {
+      versionsList.innerHTML = "";
+      msg.textContent = "";
+
+      if (versions.length === 0) {
+        msg.textContent = "Brak dostępnych wersji do pobrania.";
+        return;
+      }
+
+      for (const item of versions) {
+        const card = document.createElement("article");
+        card.className = "version-card";
+
+        const head = document.createElement("div");
+        head.className = "version-head";
+
+        const title = document.createElement("h3");
+        title.className = "version-title";
+        title.textContent = `Wersja ${item.version}`;
+
+        const system = document.createElement("span");
+        system.className = "version-meta";
+        system.textContent = item.system;
+
+        head.appendChild(title);
+        head.appendChild(system);
+
+        const details = document.createElement("p");
+        details.className = "version-meta";
+        details.textContent = `Format: ${item.format}`;
+
+        const notes = document.createElement("p");
+        notes.className = "version-meta";
+        notes.textContent = item.notes || "Brak dodatkowego opisu.";
+
+        const button = document.createElement("a");
+        button.className = "download";
+        button.textContent = "⬇ Pobierz";
+        button.href = item.href;
+        button.setAttribute("download", "");
+
+        if (item.linuxOnly && !isLinux) {
+          button.setAttribute("aria-disabled", "true");
+          button.removeAttribute("href");
+          button.removeAttribute("download");
+          msg.textContent = "Część wersji jest dostępna tylko na Linux.";
+        }
+
+        card.appendChild(head);
+        card.appendChild(details);
+        card.appendChild(notes);
+        card.appendChild(button);
+
+        if (isAdminLoggedIn()) {
+          const actions = document.createElement("div");
+          actions.className = "version-admin-actions";
+
+          const editButton = document.createElement("button");
+          editButton.className = "admin-btn secondary";
+          editButton.type = "button";
+          editButton.textContent = "Edytuj";
+          editButton.addEventListener("click", () => startVersionEdit(item));
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "admin-btn danger";
+          deleteButton.type = "button";
+          deleteButton.textContent = "Usuń";
+          deleteButton.addEventListener("click", async () => {
+            try {
+              await apiRequest(`/api/versions/${encodeURIComponent(item.id)}`, { method: "DELETE" });
+              versions = versions.filter((v) => v.id !== item.id);
+              if (editingVersionId === item.id) {
+                clearVersionForm();
+              }
+              renderVersions();
+              adminToolsMsg.textContent = `Usunięto wersję ${item.version}.`;
+            } catch (error) {
+              adminToolsMsg.textContent = error.message;
+            }
+          });
+
+          actions.appendChild(editButton);
+          actions.appendChild(deleteButton);
+          card.appendChild(actions);
+        }
+
+        versionsList.appendChild(card);
+      }
+    }
+
+    function isAdminLoggedIn() {
+      return sessionStorage.getItem(ADMIN_SESSION_KEY) === "1" && Boolean(sessionStorage.getItem(ADMIN_TOKEN_KEY));
+    }
+
+    function setAdminUi(loggedIn) {
+      adminTools.classList.toggle("hidden", !loggedIn);
+      adminLoginForm.classList.toggle("hidden", loggedIn);
+      if (!loggedIn) {
+        adminToolsMsg.textContent = "";
+        clearVersionForm();
+      }
+      renderVersions();
+    }
+
+    adminLoginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      adminAuthMsg.textContent = "";
+
+      try {
+        const payload = await apiRequest("/api/admin/login", {
+          method: "POST",
+          body: JSON.stringify({ password: adminPassword.value.trim() })
+        });
+
+        sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, payload.token || "");
+        adminPassword.value = "";
+        adminAuthMsg.textContent = "Zalogowano jako admin.";
+        setAdminUi(true);
+      } catch (error) {
+        adminAuthMsg.textContent = error.message;
+      }
+    });
+
+    adminLogout.addEventListener("click", async () => {
+      try {
+        await apiRequest("/api/admin/logout", { method: "POST" });
+      } catch {
+      }
+
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+      adminAuthMsg.textContent = "Wylogowano.";
+      setAdminUi(false);
+    });
+
+    versionCancelEdit.addEventListener("click", () => {
+      clearVersionForm();
+      adminToolsMsg.textContent = "Anulowano edycję.";
+    });
+
+    versionForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      if (!isAdminLoggedIn()) {
+        adminToolsMsg.textContent = "Sesja admina wygasła. Zaloguj się ponownie.";
+        setAdminUi(false);
+        return;
+      }
+
+      const versionPayload = normalizeVersion({
+        id: editingVersionId,
+        version: versionName.value,
+        system: versionSystem.value,
+        format: versionFormat.value,
+        href: versionLink.value,
+        linuxOnly: versionLinuxOnly.checked,
+        notes: versionNotes.value
+      });
+
+      if (!versionPayload) {
+        adminToolsMsg.textContent = "Uzupełnij poprawnie wszystkie wymagane pola.";
+        return;
+      }
+
+      try {
+        if (editingVersionId) {
+          const payload = await apiRequest(`/api/versions/${encodeURIComponent(editingVersionId)}`, {
+            method: "PUT",
+            body: JSON.stringify(versionPayload)
+          });
+          versions = Array.isArray(payload.versions) ? payload.versions.map(normalizeVersion).filter(Boolean) : versions;
+          renderVersions();
+          adminToolsMsg.textContent = `Zapisano zmiany w wersji ${versionPayload.version}.`;
+          clearVersionForm();
+        } else {
+          const payload = await apiRequest("/api/versions", {
+            method: "POST",
+            body: JSON.stringify(versionPayload)
+          });
+          versions = Array.isArray(payload.versions) ? payload.versions.map(normalizeVersion).filter(Boolean) : versions;
+          renderVersions();
+          adminToolsMsg.textContent = `Dodano wersję ${versionPayload.version}.`;
+          clearVersionForm();
+        }
+      } catch (error) {
+        adminToolsMsg.textContent = error.message;
+      }
+    });
+
+    (async () => {
+      try {
+        versions = await loadVersions();
+        setAdminUi(isAdminLoggedIn());
+        renderVersions();
+      } catch (error) {
+        msg.textContent = error.message;
+      }
+    })();
   </script>
 </body>
 </html>

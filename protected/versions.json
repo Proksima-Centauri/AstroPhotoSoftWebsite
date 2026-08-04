@@ -1,0 +1,11 @@
+[
+  {
+    "id": "linux-stable-1",
+    "version": "1.0.0",
+    "system": "Linux (x86_64)",
+    "format": "skrypt startowy (przykladowy pakiet)",
+    "href": "../downloads/astro-ai-plus-linux.sh",
+    "linuxOnly": true,
+    "notes": "Wydanie startowe"
+  }
+]
