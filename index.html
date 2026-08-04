@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AstroPhotoSoft</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .hidden { display: none; }
+    .gate {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      z-index: 20;
+      background: rgba(3, 4, 7, 0.76);
+      backdrop-filter: blur(4px);
+    }
+    .gate-panel {
+      width: min(420px, 92vw);
+      background: rgba(10, 17, 30, 0.86);
+      border: 1px solid rgba(238, 244, 255, 0.18);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .gate-panel h1 { margin: 0 0 10px; font-size: 1.3rem; }
+    .gate-panel p { margin: 0 0 16px; color: rgba(238, 244, 255, 0.8); }
+    .gate-panel input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(238, 244, 255, 0.25);
+      background: rgba(0, 0, 0, 0.25);
+      color: #eef4ff;
+      margin-bottom: 12px;
+    }
+    .gate-panel button {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #8ff2ff;
+      color: #07101d;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .gate-msg { margin-top: 10px; min-height: 20px; color: #ffb3b3; }
+  </style>
+</head>
+<body>
+  <canvas id="space"></canvas>
+
+  <div id="gate" class="gate hidden">
+    <main class="gate-panel">
+      <h1>Podaj klucz dostepu</h1>
+      <p>Sesja wygasa po 5 minutach.</p>
+      <form id="unlock-form">
+        <input id="access-key" type="password" autocomplete="off" placeholder="Klucz" required>
+        <button type="submit">Odblokuj strone</button>
+      </form>
+      <div id="gate-msg" class="gate-msg"></div>
+    </main>
+  </div>
+
+  <div id="site-content" class="hidden">
+    <nav class="topbar">
+      <div class="logo">🌌 AstroPhotoSoft</div>
+      <div class="links">
+        <a href="#">Home</a>
+        <a href="#">Aplikacje</a>
+        <a href="#">Astro</a>
+      </div>
+      <a class="support" href="https://buycoffee.to/astrophotosoft" target="_blank" rel="noreferrer">☕ Wesprzyj</a>
+    </nav>
+
+    <header class="hero">
+      <h1>Twoje centrum kosmosu</h1>
+      <p>Astrofotografia • programowanie • projekty</p>
+    </header>
+
+    <main class="grid">
+      <a class="card" href="apka1/index.html">
+        🔭
+        <h3>Astro Ai Pro</h3>
+        <p>Wersja programu Astro Ai skierowana dla Profesjonalistow. Zawiera klasyczne funkcje obrobki Astro oraz obsluguje sztuczna inteligencje ulatwiajaca przetwarzanie.</p>
+      </a>
+
+      <a class="card" href="apka2/index.html">
+        &lt;/&gt;
+        <h3>Astro Script Editor</h3>
+        <p>IDE dzialajace ze wszystkimi aplikacjami AstroPhotoSoft. Umozliwia automatyzacje przetwarzania.</p>
+      </a>
+    </main>
+
+    <section class="about">
+      <h2>O mnie</h2>
+      <p>AstroPhotoSoft to moje centrum projektow technologicznych i astrofotografii.</p>
+    </section>
+  </div>
+
+  <script src="space.js"></script>
+  <script>
+    const ACCESS_HASH = "8b32f2fa6401eb1ec35d95d078201c9a0169de4297a7466daf3984cbda358a9b";
+    const SESSION_MINUTES = 5;
+    const storageKey = "site_unlock_until";
+
+    const gate = document.getElementById("gate");
+    const site = document.getElementById("site-content");
+    const form = document.getElementById("unlock-form");
+    const input = document.getElementById("access-key");
+    const message = document.getElementById("gate-msg");
+
+    function isUnlocked() {
+      const until = Number(sessionStorage.getItem(storageKey) || 0);
+      return Number.isFinite(until) && Date.now() < until;
+    }
+
+    function showGate(msg = "") {
+      gate.classList.remove("hidden");
+      site.classList.add("hidden");
+      message.textContent = msg;
+    }
+
+    function showSite() {
+      gate.classList.add("hidden");
+      site.classList.remove("hidden");
+    }
+
+    function setUnlock() {
+      sessionStorage.setItem(storageKey, String(Date.now() + SESSION_MINUTES * 60 * 1000));
+    }
+
+    async function sha256(value) {
+      const bytes = new TextEncoder().encode(value);
+      const hash = await crypto.subtle.digest("SHA-256", bytes);
+      return [...new Uint8Array(hash)].map((x) => x.toString(16).padStart(2, "0")).join("");
+    }
+
+    function refreshState() {
+      if (isUnlocked()) {
+        showSite();
+      } else {
+        sessionStorage.removeItem(storageKey);
+        showGate();
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.textContent = "";
+
+      const givenHash = await sha256(input.value);
+      if (givenHash !== ACCESS_HASH) {
+        showGate("Niepoprawny klucz.");
+        return;
+      }
+
+      input.value = "";
+      setUnlock();
+      showSite();
+    });
+
+    setInterval(refreshState, 5000);
+    refreshState();
+  </script>
+</body>
+</html>
