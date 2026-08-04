@@ -1,13 +1,31 @@
 const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-window.addEventListener("resize", () => {
+function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-});
+
+  for (const star of stars) {
+    if (star.x < 0 || star.x > canvas.width) {
+      star.x = Math.random() * canvas.width;
+    }
+    if (star.y < 0 || star.y > canvas.height) {
+      star.y = Math.random() * canvas.height;
+    }
+  }
+
+  if (Number.isFinite(pointerX) && Number.isFinite(pointerY)) {
+    pointerX = Math.min(Math.max(pointerX, 0), canvas.width);
+    pointerY = Math.min(Math.max(pointerY, 0), canvas.height);
+  }
+
+  if (Number.isFinite(targetX) && Number.isFinite(targetY)) {
+    targetX = Math.min(Math.max(targetX, 0), canvas.width);
+    targetY = Math.min(Math.max(targetY, 0), canvas.height);
+  }
+}
+
+window.addEventListener("resize", resizeCanvas);
 
 const HARVARD_COLORS = [
   "rgba(215, 228, 255, ",
@@ -35,17 +53,23 @@ for (let i = 0; i < numStars; i += 1) {
   });
 }
 
-let mouseX = -1000;
-let mouseY = -1000;
+let pointerActive = false;
+let pointerX = canvas.width / 2;
+let pointerY = canvas.height / 2;
 let targetX = canvas.width / 2;
 let targetY = canvas.height / 2;
+
+resizeCanvas();
 
 function draw() {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  targetX += (mouseX - targetX) * 0.1;
-  targetY += (mouseY - targetY) * 0.1;
+  const desiredX = pointerActive ? pointerX : canvas.width / 2;
+  const desiredY = pointerActive ? pointerY : canvas.height / 2;
+  targetX += (desiredX - targetX) * 0.1;
+  targetY += (desiredY - targetY) * 0.1;
+  const blackHoleRadius = 350;
 
   for (const s of stars) {
     s.x += s.vx * s.depth;
@@ -59,15 +83,16 @@ function draw() {
     let x = s.x;
     let y = s.y;
 
-    const dx = x - targetX;
-    const dy = y - targetY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const blackHoleRadius = 350;
+    if (pointerActive) {
+      const dx = x - targetX;
+      const dy = y - targetY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dist < blackHoleRadius) {
-      const force = Math.max(0, 1 - dist / blackHoleRadius) * 7000 / (dist * dist + 0.001);
-      x -= dx * force;
-      y -= dy * force;
+      if (dist < blackHoleRadius) {
+        const force = Math.max(0, 1 - dist / blackHoleRadius) * 7000 / (dist * dist + 0.001);
+        x -= dx * force;
+        y -= dy * force;
+      }
     }
 
     const size = s.depth * 0.8;
@@ -83,13 +108,31 @@ function draw() {
 }
 
 document.addEventListener("mousemove", (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
+  pointerActive = true;
+  pointerX = e.clientX;
+  pointerY = e.clientY;
 });
 
 document.addEventListener("mouseleave", () => {
-  mouseX = -1000;
-  mouseY = -1000;
+  pointerActive = false;
+});
+
+document.addEventListener("touchmove", (e) => {
+  if (!e.touches || e.touches.length === 0) {
+    return;
+  }
+
+  pointerActive = true;
+  pointerX = e.touches[0].clientX;
+  pointerY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener("touchend", () => {
+  pointerActive = false;
+});
+
+document.addEventListener("touchcancel", () => {
+  pointerActive = false;
 });
 
 draw();

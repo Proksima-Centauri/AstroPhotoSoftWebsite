@@ -60,7 +60,7 @@ body::before {
 }
 
 .links a {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.82);
   text-decoration: none;
   transition: color 0.2s;
 }
@@ -70,8 +70,8 @@ body::before {
 }
 
 .support {
-  background: white;
-  color: black;
+  background: #79f3ff;
+  color: #031521;
   padding: 8px 12px;
   border-radius: 10px;
   text-decoration: none;
@@ -153,4 +153,28 @@ body::before {
 .about p {
   color: rgba(255, 255, 255, 0.6);
   line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 14px;
+    padding: 12px 14px;
+  }
+
+  .links {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .hero {
+    padding-top: 72px;
+  }
+
+  .grid {
+    padding: 20px 18px 36px;
+  }
 }

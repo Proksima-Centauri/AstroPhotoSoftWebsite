@@ -41,10 +41,14 @@
       padding: 10px 12px;
       border-radius: 8px;
       border: none;
-      background: #8ff2ff;
-      color: #07101d;
+      background: #66e6ff;
+      color: #031521;
       font-weight: 700;
       cursor: pointer;
+    }
+    .gate-panel button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
     }
     .gate-msg { margin-top: 10px; min-height: 20px; color: #ffb3b3; }
   </style>
@@ -54,13 +58,13 @@
 
   <div id="gate" class="gate hidden">
     <main class="gate-panel">
-      <h1>Podaj klucz dostepu</h1>
+      <h1>Podaj klucz dostępu</h1>
       <p>Sesja wygasa po 5 minutach.</p>
       <form id="unlock-form">
         <input id="access-key" type="password" autocomplete="off" placeholder="Klucz" required>
-        <button type="submit">Odblokuj strone</button>
+        <button id="unlock-button" type="submit">Odblokuj stronę</button>
       </form>
-      <div id="gate-msg" class="gate-msg"></div>
+      <div id="gate-msg" class="gate-msg" aria-live="polite"></div>
     </main>
   </div>
 
@@ -81,37 +85,54 @@
     </header>
 
     <main class="grid">
-      <a class="card" href="apka1/index.html">
+      <a class="card" href="apka1/index.html" aria-label="Przejdź do aplikacji Astro AI Pro">
         🔭
-        <h3>Astro Ai Pro</h3>
-        <p>Wersja programu Astro Ai skierowana dla Profesjonalistow. Zawiera klasyczne funkcje obrobki Astro oraz obsluguje sztuczna inteligencje ulatwiajaca przetwarzanie.</p>
+        <h3>Astro AI Pro</h3>
+        <p>Wersja programu Astro AI skierowana dla Profesjonalistów. Zawiera klasyczne funkcje obróbki Astro oraz obsługuje sztuczną inteligencję ułatwiającą przetwarzanie.</p>
       </a>
 
-      <a class="card" href="apka2/index.html">
+      <a class="card" href="apka2/index.html" aria-label="Przejdź do aplikacji Astro Script Editor">
         &lt;/&gt;
         <h3>Astro Script Editor</h3>
-        <p>IDE dzialajace ze wszystkimi aplikacjami AstroPhotoSoft. Umozliwia automatyzacje przetwarzania.</p>
+        <p>IDE działające ze wszystkimi aplikacjami AstroPhotoSoft. Umożliwia automatyzację przetwarzania.</p>
       </a>
     </main>
 
     <section class="about">
       <h2>O mnie</h2>
-      <p>AstroPhotoSoft to moje centrum projektow technologicznych i astrofotografii.</p>
+      <p>AstroPhotoSoft to moje centrum projektów technologicznych i astrofotografii.</p>
     </section>
   </div>
 
   <script src="space.js"></script>
   <script>
-    const ACCESS_KEY = "Delta1/6";
     const ACCESS_HASH = "8b32f2fa6401eb1ec35d95d078201c9a0169de4297a7466daf3984cbda358a9b";
     const SESSION_MINUTES = 5;
+    const LOCKOUT_MS = 3000;
     const storageKey = "site_unlock_until";
 
     const gate = document.getElementById("gate");
     const site = document.getElementById("site-content");
     const form = document.getElementById("unlock-form");
     const input = document.getElementById("access-key");
+    const button = document.getElementById("unlock-button");
     const message = document.getElementById("gate-msg");
+    let lockedUntil = 0;
+
+    function remainingLockSeconds() {
+      return Math.max(0, Math.ceil((lockedUntil - Date.now()) / 1000));
+    }
+
+    function updateLockUi() {
+      const seconds = remainingLockSeconds();
+      if (seconds > 0) {
+        button.disabled = true;
+        message.textContent = `Za dużo prób. Spróbuj ponownie za ${seconds} s.`;
+        return;
+      }
+
+      button.disabled = false;
+    }
 
     function isUnlocked() {
       const until = Number(sessionStorage.getItem(storageKey) || 0);
@@ -122,6 +143,8 @@
       gate.classList.remove("hidden");
       site.classList.add("hidden");
       message.textContent = msg;
+      input.focus();
+      updateLockUi();
     }
 
     function showSite() {
@@ -140,11 +163,8 @@
     }
 
     async function verifyPassword(value) {
-      if (value === ACCESS_KEY) {
-        return true;
-      }
-
       if (!window.crypto || !window.crypto.subtle) {
+        message.textContent = "Brak wsparcia dla bezpiecznego sprawdzania hasła w tej przeglądarce.";
         return false;
       }
 
@@ -163,21 +183,57 @@
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+
+      if (Date.now() < lockedUntil) {
+        updateLockUi();
+        return;
+      }
+
       message.textContent = "";
 
       const provided = input.value.trim();
       const ok = await verifyPassword(provided);
       if (!ok) {
-        showGate("Niepoprawny klucz.");
+        lockedUntil = Date.now() + LOCKOUT_MS;
+        updateLockUi();
+        if (!message.textContent) {
+          message.textContent = "Niepoprawny klucz.";
+        }
         return;
       }
 
       input.value = "";
+      lockedUntil = 0;
+      button.disabled = false;
       setUnlock();
       showSite();
     });
 
-    setInterval(refreshState, 5000);
+    input.addEventListener("input", () => {
+      message.textContent = "";
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      if (!gate.classList.contains("hidden")) {
+        input.value = "";
+        if (Date.now() >= lockedUntil) {
+          message.textContent = "";
+        }
+        return;
+      }
+
+      sessionStorage.removeItem(storageKey);
+      showGate("Sesja została zamknięta klawiszem Esc.");
+    });
+
+    setInterval(() => {
+      refreshState();
+      updateLockUi();
+    }, 500);
     refreshState();
   </script>
 </body>
