@@ -7,7 +7,7 @@ const HOST = process.env.HOST || "127.0.0.1";
 const PORT = Number(process.env.PORT || 8080);
 const ROOT_DIR = __dirname;
 const DATA_FILE = path.join(ROOT_DIR, "protected", "versions.json");
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "dc8aac550a1dd257547ced9c41fedbaf9f6ab4a55a33632e012d9e751ce9d04b";
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "8b32f2fa6401eb1ec35d95d078201c9a0169de4297a7466daf3984cbda358a9b";
 const TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
 
 const sessions = new Map();
