@@ -127,8 +127,13 @@ body::before {
 }
 
 .card-icon {
-  width: 128px;
-  height: 128px;
+  width: 128px !important;
+  height: 128px !important;
+  max-width: 128px;
+  min-width: 128px;
+  max-height: 128px;
+  min-height: 128px;
+  flex: 0 0 128px;
   border-radius: 14px;
   display: block;
   margin-bottom: 10px;
